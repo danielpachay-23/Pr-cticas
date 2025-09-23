@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Registro de Bienes - Múltiples Páginas</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 20px;
+            padding-bottom: 40px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            border: none;
+        }
+        .table-responsive {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .btn-action {
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .export-buttons {
+            margin-top: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #0062cc, #0095ff);
+            color: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 20px;
+        }
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        .form-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0062cc;
+        }
+        .form-section h5 {
+            color: #0062cc;
+            margin-bottom: 15px;
+        }
+        .table thead th {
+            background-color: #0062cc;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        .btn-export {
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #equipmentTable tr:hover {
+            background-color: #f1f7ff;
+        }
+        .actions-column {
+            width: 120px;
+        }
+        .combo-input-group {
+            display: flex;
+        }
+        .combo-input-group select,
+        .combo-input-group input {
+            flex: 1;
+        }
+        .input-group-combined {
+            display: flex;
+        }
+        .input-group-combined select,
+        .input-group-combined input {
+            flex: 1;
+        }
+        .processor-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .processor-type {
+            flex: 0 0 100px;
+        }
+        .processor-model {
+            flex: 1;
+        }
+        .processor-custom {
+            flex: 1;
+        }
+        .processor-separator {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #6c757d;
+            position: relative;
+        }
+        .processor-separator::before,
+        .processor-separator::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background-color: #dee2e6;
+        }
+        .processor-separator::before {
+            left: 0;
+        }
+        .processor-separator::after {
+            right: 0;
+        }
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 300px;
+        }
+        .form-control:invalid {
+            border-color: #dc3545;
+        }
+        .invalid-feedback {
+            display: none;
+            width: 100%;
+            margin-top: 0.25rem;
+            font-size: 0.875em;
+            color: #dc3545;
+        }
+        .form-control:invalid ~ .invalid-feedback {
+            display: block;
+        }
+        .btn-clear-all {
+            margin-left: 10px;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #0062cc;
+            color: white;
+            border-color: #0062cc;
+        }
+        .nav-tabs .nav-link {
+            color: #0062cc;
+        }
+        .page-management {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        .page-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .page-btn {
+            padding: 5px 15px;
+            border-radius: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .page-btn.active {
+            background-color: #0062cc;
+            color: white;
+            border-color: #0062cc;
+        }
+        .page-btn:hover {
+            background-color: #e2e6ea;
+        }
+    </style>
+</head>
+<body>
+    <div class="card mt-4">
+        <div class="card-header bg-primary text-white">
+          <i class="fas fa-user"></i> Información del Personal
+        </div>
+        <div class="card-body">
+          <form>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Estado</label>
+                <input type="text" class="form-control" placeholder="Ingrese estado">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Relación</label>
+                <input type="text" class="form-control" placeholder="Ingrese relación">
+              </div>
+            </div>
+      
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Funcionario</label>
+                <input type="text" class="form-control" placeholder="Nombre del funcionario">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Cédula Identidad</label>
+                <input type="text" class="form-control" placeholder="Número de cédula">
+              </div>
+            </div>
+      
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Departamento</label>
+                <input type="text" class="form-control" placeholder="Departamento">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Área</label>
+                <input type="text" class="form-control" placeholder="Área de trabajo">
+              </div>
+            </div>
+      
+            <!-- Agregas de la misma manera los demás campos -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Cargo</label>
+                <input type="text" class="form-control" placeholder="Cargo">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Lugar de Trabajo</label>
+                <input type="text" class="form-control" placeholder="Lugar de trabajo">
+              </div>
+            </div>
+      
+            <!-- Ejemplo para fechas -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Fecha de Nacimiento</label>
+                <input type="date" class="form-control">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Edad</label>
+                <input type="number" class="form-control" placeholder="Edad">
+              </div>
+            </div>
+      
+            <!-- Ejemplo para entradas y salidas -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Primer Ingreso</label>
+                <input type="date" class="form-control">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Primera Salida</label>
+                <input type="date" class="form-control">
+              </div>
+            </div>
+      
+            <!-- Repites el patrón hasta Séptima salida y Última salida -->
+      
+            <button type="submit" class="btn btn-success">Guardar</button>
+          </form>
+        </div>
+      </div>      
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SheetJS (xlsx) para exportar a Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- jsPDF para exportar a PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+</body>
+
+</html>
+
+
