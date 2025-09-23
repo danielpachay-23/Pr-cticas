@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Registro de Bienes - Múltiples Páginas</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 20px;
+            padding-bottom: 40px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            border: none;
+        }
+        .table-responsive {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .btn-action {
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .export-buttons {
+            margin-top: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #0062cc, #0095ff);
+            color: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 20px;
+        }
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        .form-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0062cc;
+        }
+        .form-section h5 {
+            color: #0062cc;
+            margin-bottom: 15px;
+        }
+        .table thead th {
+            background-color: #0062cc;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        .btn-export {
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #equipmentTable tr:hover {
+            background-color: #f1f7ff;
+        }
+        .actions-column {
+            width: 120px;
+        }
+        .combo-input-group {
+            display: flex;
+        }
+        .combo-input-group select,
+        .combo-input-group input {
+            flex: 1;
+        }
+        .input-group-combined {
+            display: flex;
+        }
+        .input-group-combined select,
+        .input-group-combined input {
+            flex: 1;
+        }
+        .processor-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .processor-type {
+            flex: 0 0 100px;
+        }
+        .processor-model {
+            flex: 1;
+        }
+        .processor-custom {
+            flex: 1;
+        }
+        .processor-separator {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #6c757d;
+            position: relative;
+        }
+        .processor-separator::before,
+        .processor-separator::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background-color: #dee2e6;
+        }
+        .processor-separator::before {
+            left: 0;
+        }
+        .processor-separator::after {
+            right: 0;
+        }
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 300px;
+        }
+        .form-control:invalid {
+            border-color: #dc3545;
+        }
+        .invalid-feedback {
+            display: none;
+            width: 100%;
+            margin-top: 0.25rem;
+            font-size: 0.875em;
+            color: #dc3545;
+        }
+        .form-control:invalid ~ .invalid-feedback {
+            display: block;
+        }
+        .btn-clear-all {
+            margin-left: 10px;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #0062cc;
+            color: white;
+            border-color: #0062cc;
+        }
+        .nav-tabs .nav-link {
+            color: #0062cc;
+        }
+        .page-management {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        .page-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .page-btn {
+            padding: 5px 15px;
+            border-radius: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .page-btn.active {
+            background-color: #0062cc;
+            color: white;
+            border-color: #0062cc;
+        }
+        .page-btn:hover {
+            background-color: #e2e6ea;
+        }
+    </style>
+</head>
+<body>
+    <div class="alert-container" id="alertContainer"></div>
+
+    <div class="container">
+        <div class="card">
+            <div class="header text-center">
+                <h1><i class="fas fa-laptop me-2"></i>Registro de Bienes Tecnológicos</h1>
+                <p class="lead">Sistema multi-usuario con páginas independientes</p>
+            </div>
+
+            <div class="card-body">
+                <!-- Gestión de páginas -->
+                <div class="page-management">
+                    <div>
+                        <h5>Páginas de Registro</h5>
+                        <p class="mb-0">Selecciona o crea una página para gestionar registros</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-success" id="addPageBtn">
+                            <i class="fas fa-plus me-1"></i> Nueva Página
+                        </button>
+                    </div>
+                </div>
+
+                <div class="page-list mb-4" id="pageList">
+                    <!-- Las páginas se generarán aquí dinámicamente -->
+                </div>
+
+                <!-- Formulario de registro -->
+                <div id="formContainer">
+                    <form id="equipmentForm" class="row g-3 mb-4" novalidate>
+                        <div class="col-md-12">
+                            <div class="form-section">
+                                <h5><i class="fas fa-info-circle me-2"></i>Información Principal</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="assetCode" class="form-label required">BIEN</label>
+                                        <input type="text" class="form-control" id="assetCode" required>
+                                        <div class="invalid-feedback">
+                                            Por favor ingrese el código de bien.
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="custodian" class="form-label required">APELLIDOS Y NOMBRES CUSTODIO</label>
+                                        <input type="text" class="form-control" id="custodian" required>
+                                        <div class="invalid-feedback">
+                                            Por favor ingrese el nombre del custodio.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="form-section">
+                                <h5><i class="fas fa-laptop me-2"></i>Especificaciones del Equipo</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="equipmentName" class="form-label required">NOMBRE EQUIPO</label>
+                                        <input type="text" class="form-control" id="equipmentName" required>
+                                        <div class="invalid-feedback">
+                                            Por favor ingrese el nombre del equipo.
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="brand" class="form-label">MARCA</label>
+                                        <div class="combo-input-group">
+                                            <select class="form-select" id="brandSelect">
+                                                <option value="">Seleccionar...</option>
+                                                <option value="LENOVO">LENOVO</option>
+                                                <option value="HP">HP</option>
+                                                <option value="DELL">DELL</option>
+                                                <option value="ASUS">ASUS</option>
+                                                <option value="LG">LG</option>
+                                                <option value="GENIUS">GENIUS</option>
+                                                <option value="SAMSUNG">SAMSUNG</option>
+                                                <option value="CISCO IP">CISCO IP</option>
+                                                <option value="QUASAD">QUASAD</option>
+                                                <option value="DYNABOOK">DYNABOOK</option>
+                                            </select>
+                                            <input type="text" class="form-control" id="brandInput" placeholder="Otra marca">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="model" class="form-label">MODELO</label>
+                                        <input type="text" class="form-control" id="model">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="serial" class="form-label">SERIE</label>
+                                        <input type="text" class="form-control" id="serial">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="type" class="form-label">TIPO DE BIEN</label>
+                                        <select class="form-select" id="type">
+                                            <option value="">Seleccionar...</option>
+                                            <option value="MONITOR">MONITOR</option>
+                                            <option value="CPU">CPU</option>
+                                            <option value="MOUSE">MOUSE</option>
+                                            <option value="TECLADO">TECLADO</option>
+                                            <option value="LAPTOP">LAPTOP</option>
+                                            <option value="CPU/MONITOR">CPU/MONITOR</option>
+                                            <option value="TELEFONO FIJO">TELEFONO FIJO</option>
+                                            <option value="TELEVISOR">TELEVISOR</option>
+                                            <option value="IMPRESORA">IMPRESORA</option>
+                                            <option value="TABLET">TABLET</option>
+                                            <option value="UPS">UPS</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="processor" class="form-label">PROCESADOR</label>
+                                        <div class="processor-container">
+                                            <select class="form-select processor-type" id="processorType">
+                                                <option value="">Tipo...</option>
+                                                <option value="I3">I3</option>
+                                                <option value="I5">I5</option>
+                                                <option value="I7">I7</option>
+                                                <option value="RYZEN">RYZEN</option>
+                                                <option value="XEON">XEON</option>
+                                            </select>
+                                            <input type="text" class="form-control processor-model" id="processorModel" placeholder="Modelo (ej: 10500)">
+                                        </div>
+                                        <div class="processor-separator">O</div>
+                                        <input type="text" class="form-control processor-custom" id="processorCustom" placeholder="Escribir procesador personalizado">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="memory" class="form-label">MEMORIA (GB)</label>
+                                        <input type="number" class="form-control" id="memory" min="0">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="hardDrive" class="form-label">DISCO DURO</label>
+                                        <div class="input-group-combined">
+                                            <select class="form-select" id="hardDriveTech">
+                                                <option value="HDD">HDD</option>
+                                                <option value="SSD">SSD</option>
+                                                <option value="HDD/SSD">HDD/SSD</option>
+                                            </select>
+                                            <input type="number" class="form-control" id="hardDriveSize" placeholder="Capacidad" min="0">
+                                            <select class="form-select" id="hardDriveType">
+                                                <option value="GB">GB</option>
+                                                <option value="TB">TB</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="os" class="form-label">SISTEMA OPERATIVO</label>
+                                        <div class="combo-input-group">
+                                            <select class="form-select" id="osSelect">
+                                                <option value="">Seleccionar...</option>
+                                                <option value="W 10">W 10</option>
+                                                <option value="W 11">W 11</option>
+                                                <option value="W 10 PRO">W 10 PRO</option>
+                                                <option value="W 11 PRO">W 11 PRO</option>
+                                            </select>
+                                            <input type="text" class="form-control" id="osInput" placeholder="Otro SO">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="status" class="form-label">ESTADO</label>
+                                        <select class="form-select" id="status">
+                                            <option value="">Seleccionar...</option>
+                                            <option value="OPERATIVO">OPERATIVO</option>
+                                            <option value="NO OPERATIVO">NO OPERATIVO</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="operationTime" class="form-label">TIEMPO DE FUNCIONAMIENTO</label>
+                                        <div class="input-group-combined">
+                                            <input type="number" class="form-control" id="operationTimeValue" min="0">
+                                            <select class="form-select" id="operationTimeUnit">
+                                                <option value="meses">Meses</option>
+                                                <option value="días">Días</option>
+                                                <option value="años">Años</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save me-2"></i>Guardar Registro</button>
+                            <button type="reset" class="btn btn-secondary btn-lg ms-2"><i class="fas fa-undo me-2"></i>Limpiar</button>
+                            <button type="button" class="btn btn-danger btn-lg ms-2 btn-clear-all" id="clearPageBtn"><i class="fas fa-trash-alt me-2"></i>Borrar Página Actual</button>
+                        </div>
+                    </form>
+                </div>
+
+                <hr>
+
+                <!-- Tabla de registros -->
+                <h3 class="mb-3"><i class="fas fa-list me-2"></i>Registros Guardados - <span id="currentPageName">Página Principal</span></h3>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>BIEN</th>
+                                <th>APELLIDOS Y NOMBRES CUSTODIO</th>
+                                <th>NOMBRE EQUIPO</th>
+                                <th>MARCA</th>
+                                <th>MODELO</th>
+                                <th>SERIE</th>
+                                <th>TIPO DE BIEN</th>
+                                <th>PROCESADOR</th>
+                                <th>MEMORIA</th>
+                                <th>DISCO DURO</th>
+                                <th>SISTEMA OPERATIVO</th>
+                                <th>ESTADO</th>
+                                <th>TIEMPO DE FUNCIONAMIENTO</th>
+                                <th class="actions-column">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="equipmentTable">
+                            <!-- Los registros se insertarán aquí dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Botones de exportación -->
+                <div class="export-buttons text-center">
+                    <button id="exportExcel" class="btn btn-success btn-export"><i class="fas fa-file-excel me-2"></i>Exportar a Excel</button>
+                    <button id="exportPDF" class="btn btn-danger btn-export ms-2"><i class="fas fa-file-pdf me-2"></i>Exportar a PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para crear nueva página -->
+    <div class="modal fade" id="newPageModal" tabindex="-1" aria-labelledby="newPageModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newPageModalLabel">Crear Nueva Página</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="newPageName" class="form-label">Nombre de la página</label>
+                        <input type="text" class="form-control" id="newPageName" placeholder="Ej: Registros de Juan">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="confirmNewPage">Crear Página</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación para borrar página -->
+    <div class="modal fade" id="clearPageModal" tabindex="-1" aria-labelledby="clearPageModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="clearPageModalLabel">Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea eliminar todos los registros de esta página? Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmClearPage">Eliminar Página</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SheetJS (xlsx) para exportar a Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- jsPDF para exportar a PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        // Inicializar jsPDF
+        window.jsPDF = window.jspdf.jsPDF;
+
+        // Estructura de datos para múltiples páginas
+        let pagesData = JSON.parse(localStorage.getItem('pagesData')) || {
+            "principal": {
+                name: "Página Principal",
+                equipmentData: []
+            }
+        };
+        
+        let currentPageId = "principal";
+        let editIndex = -1;
+
+        // Función para guardar los datos en localStorage
+        function saveData() {
+            localStorage.setItem('pagesData', JSON.stringify(pagesData));
+        }
+
+        // Función para renderizar la lista de páginas
+        function renderPageList() {
+            const pageList = document.getElementById('pageList');
+            pageList.innerHTML = '';
+            
+            for (const pageId in pagesData) {
+                const page = pagesData[pageId];
+                const pageBtn = document.createElement('div');
+                pageBtn.className = `page-btn ${pageId === currentPageId ? 'active' : ''}`;
+                pageBtn.innerHTML = `
+                    <span>${page.name}</span>
+                    ${pageId !== 'principal' ? `<button class="btn-close ms-2" data-page="${pageId}"></button>` : ''}
+                `;
+                
+                pageBtn.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('btn-close')) {
+                        switchPage(pageId);
+                    }
+                });
+                
+                // Agregar evento para eliminar página (excepto la principal)
+                if (pageId !== 'principal') {
+                    const closeBtn = pageBtn.querySelector('.btn-close');
+                    closeBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deletePage(pageId);
+                    });
+                }
+                
+                pageList.appendChild(pageBtn);
+            }
+        }
+
+        // Función para cambiar de página
+        function switchPage(pageId) {
+            currentPageId = pageId;
+            renderPageList();
+            renderTable();
+            document.getElementById('currentPageName').textContent = pagesData[pageId].name;
+            
+            // Reiniciar formulario
+            document.getElementById('equipmentForm').reset();
+            editIndex = -1;
+            document.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-save me-2"></i>Guardar Registro';
+            
+            showAlert(`Cambiado a página: ${pagesData[pageId].name}`, 'info');
+        }
+
+        // Función para eliminar una página
+        function deletePage(pageId) {
+            if (Object.keys(pagesData).length <= 1) {
+                showAlert('Debe haber al menos una página.', 'warning');
+                return;
+            }
+            
+            if (confirm(`¿Está seguro de que desea eliminar la página "${pagesData[pageId].name}"?`)) {
+                delete pagesData[pageId];
+                
+                // Si eliminamos la página actual, cambiar a la principal
+                if (pageId === currentPageId) {
+                    currentPageId = "principal";
+                }
+                
+                saveData();
+                renderPageList();
+                renderTable();
+                document.getElementById('currentPageName').textContent = pagesData[currentPageId].name;
+                
+                showAlert('Página eliminada correctamente', 'success');
+            }
+        }
+
+        // Función para mostrar los registros en la tabla
+        function renderTable() {
+            const tableBody = document.getElementById('equipmentTable');
+            tableBody.innerHTML = '';
+            
+            const equipmentData = pagesData[currentPageId].equipmentData;
+
+            if (equipmentData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="14" class="text-center py-4">
+                        <i class="fas fa-info-circle fa-2x mb-3 text-secondary"></i>
+                        <p>No hay registros guardados en esta página. Agregue un nuevo registro.</p>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+                return;
+            }
+
+            equipmentData.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.assetCode}</td>
+                    <td>${item.custodian}</td>
+                    <td>${item.equipmentName}</td>
+                    <td>${item.brand}</td>
+                    <td>${item.model}</td>
+                    <td>${item.serial}</td>
+                    <td>${item.type}</td>
+                    <td>${item.processor}</td>
+                    <td>${item.memory} GB</td>
+                    <td>${item.hardDrive}</td>
+                    <td>${item.os}</td>
+                    <td>${item.status}</td>
+                    <td>${item.operationTime}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning btn-action edit-btn" data-index="${index}">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-sm btn-danger btn-action delete-btn" data-index="${index}">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // Agregar event listeners a los botones de editar y eliminar
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = e.currentTarget.getAttribute('data-index');
+                    editRecord(index);
+                });
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = e.currentTarget.getAttribute('data-index');
+                    deleteRecord(index);
+                });
+            });
+        }
+
+        // Función para validar el formulario
+        function validateForm() {
+            const form = document.getElementById('equipmentForm');
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return false;
+            }
+            return true;
+        }
+
+        // Función para agregar o editar un registro
+        document.getElementById('equipmentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                showAlert('Por favor, complete todos los campos obligatorios.', 'danger');
+                return;
+            }
+            
+            // Obtener valores de los campos combinados
+            const brand = document.getElementById('brandSelect').value || document.getElementById('brandInput').value;
+            
+            // Obtener valor del procesador
+            let processor = '';
+            const processorType = document.getElementById('processorType').value;
+            const processorModel = document.getElementById('processorModel').value;
+            const processorCustom = document.getElementById('processorCustom').value;
+            
+            if (processorCustom) {
+                processor = processorCustom;
+            } else if (processorType && processorModel) {
+                processor = `${processorType} ${processorModel}`;
+            } else if (processorType) {
+                processor = processorType;
+            } else if (processorModel) {
+                processor = processorModel;
+            }
+            
+            const os = document.getElementById('osSelect').value || document.getElementById('osInput').value;
+            const hardDriveSize = document.getElementById('hardDriveSize').value;
+            const hardDriveType = document.getElementById('hardDriveType').value;
+            const hardDriveTech = document.getElementById('hardDriveTech').value;
+            const hardDrive = hardDriveSize ? `${hardDriveTech} ${hardDriveSize} ${hardDriveType}` : '';
+            const operationTimeValue = document.getElementById('operationTimeValue').value;
+            const operationTimeUnit = document.getElementById('operationTimeUnit').value;
+            const operationTime = operationTimeValue ? `${operationTimeValue} ${operationTimeUnit}` : '';
+            
+            const record = {
+                assetCode: document.getElementById('assetCode').value,
+                custodian: document.getElementById('custodian').value,
+                equipmentName: document.getElementById('equipmentName').value,
+                brand: brand,
+                model: document.getElementById('model').value,
+                serial: document.getElementById('serial').value,
+                type: document.getElementById('type').value,
+                processor: processor,
+                memory: document.getElementById('memory').value,
+                hardDrive: hardDrive,
+                os: os,
+                status: document.getElementById('status').value,
+                operationTime: operationTime
+            };
+
+            const equipmentData = pagesData[currentPageId].equipmentData;
+
+            // Validar que el código de bien no esté duplicado (excepto en edición)
+            if (editIndex === -1) {
+                const existingIndex = equipmentData.findIndex(item => item.assetCode === record.assetCode);
+                if (existingIndex !== -1) {
+                    showAlert('El código de bien ya existe. Por favor, use un código único.', 'danger');
+                    return;
+                }
+            }
+
+            if (editIndex === -1) {
+                // Agregar nuevo registro
+                equipmentData.push(record);
+                showAlert('Registro guardado exitosamente', 'success');
+            } else {
+                // Actualizar registro existente
+                equipmentData[editIndex] = record;
+                editIndex = -1;
+                document.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-save me-2"></i>Guardar Registro';
+                showAlert('Registro actualizado exitosamente', 'success');
+            }
+
+            saveData();
+            renderTable();
+            this.reset();
+            this.classList.remove('was-validated');
+        });
+
+        // Función para mostrar alertas
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.getElementById('alertContainer').appendChild(alertDiv);
+            
+            // Auto cerrar la alerta después de 3 segundos
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.parentElement.removeChild(alertDiv);
+                }
+            }, 3000);
+        }
+
+        // Función para editar un registro
+        function editRecord(index) {
+            const equipmentData = pagesData[currentPageId].equipmentData;
+            const record = equipmentData[index];
+            
+            document.getElementById('assetCode').value = record.assetCode;
+            document.getElementById('custodian').value = record.custodian;
+            document.getElementById('equipmentName').value = record.equipmentName;
+            
+            // Manejar campos combinados
+            if (record.brand) {
+                const brandOptions = ["LENOVO", "HP", "DELL", "ASUS", "LG", "GENIUS", "SAMSUNG", "CISCO IP", "QUASAD", "DYNABOOK"];
+                if (brandOptions.includes(record.brand.toUpperCase())) {
+                    document.getElementById('brandSelect').value = record.brand.toUpperCase();
+                    document.getElementById('brandInput').value = '';
+                } else {
+                    document.getElementById('brandSelect').value = '';
+                    document.getElementById('brandInput').value = record.brand;
+                }
+            }
+            
+            document.getElementById('model').value = record.model;
+            document.getElementById('serial').value = record.serial;
+            document.getElementById('type').value = record.type;
+            
+            // Manejar procesador
+            if (record.processor) {
+                const processorOptions = ["I3", "I5", "I7", "RYZEN", "XEON"];
+                let found = false;
+                
+                for (const option of processorOptions) {
+                    if (record.processor.toUpperCase().startsWith(option)) {
+                        const modelPart = record.processor.substring(option.length).trim();
+                        document.getElementById('processorType').value = option;
+                        document.getElementById('processorModel').value = modelPart;
+                        document.getElementById('processorCustom').value = '';
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (!found) {
+                    document.getElementById('processorType').value = '';
+                    document.getElementById('processorModel').value = '';
+                    document.getElementById('processorCustom').value = record.processor;
+                }
+            }
+            
+            document.getElementById('memory').value = record.memory;
+            
+            if (record.hardDrive) {
+                const hdParts = record.hardDrive.split(' ');
+                if (hdParts.length >= 3) {
+                    document.getElementById('hardDriveTech').value = hdParts[0];
+                    document.getElementById('hardDriveSize').value = hdParts[1];
+                    document.getElementById('hardDriveType').value = hdParts[2];
+                }
+            }
+            
+            if (record.os) {
+                const osOptions = ["W 10", "W 11", "W 10 PRO", "W 11 PRO"];
+                if (osOptions.includes(record.os.toUpperCase())) {
+                    document.getElementById('osSelect').value = record.os.toUpperCase();
+                    document.getElementById('osInput').value = '';
+                } else {
+                    document.getElementById('osSelect').value = '';
+                    document.getElementById('osInput').value = record.os;
+                }
+            }
+            
+            document.getElementById('status').value = record.status;
+            
+            if (record.operationTime) {
+                const timeParts = record.operationTime.split(' ');
+                if (timeParts.length >= 2) {
+                    document.getElementById('operationTimeValue').value = timeParts[0];
+                    document.getElementById('operationTimeUnit').value = timeParts[1];
+                }
+            }
+
+            editIndex = index;
+            document.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-save me-2"></i>Actualizar Registro';
+            
+            // Scroll al formulario
+            document.getElementById('equipmentForm').scrollIntoView({ behavior: 'smooth' });
+            
+            // Mostrar mensaje
+            showAlert('Modo edición: Actualizando registro seleccionado', 'info');
+        }
+
+        // Función para eliminar un registro
+        function deleteRecord(index) {
+            if (confirm('¿Estás seguro de que deseas eliminar este registro?')) {
+                pagesData[currentPageId].equipmentData.splice(index, 1);
+                saveData();
+                renderTable();
+                showAlert('Registro eliminado exitosamente', 'danger');
+            }
+        }
+
+        // Función para crear una nueva página
+        document.getElementById('addPageBtn').addEventListener('click', function() {
+            const newPageModal = new bootstrap.Modal(document.getElementById('newPageModal'));
+            newPageModal.show();
+        });
+
+        document.getElementById('confirmNewPage').addEventListener('click', function() {
+            const pageName = document.getElementById('newPageName').value.trim();
+            
+            if (!pageName) {
+                showAlert('Por favor, ingrese un nombre para la página.', 'warning');
+                return;
+            }
+            
+            // Crear un ID único para la página
+            const pageId = 'page_' + Date.now();
+            
+            // Agregar la nueva página
+            pagesData[pageId] = {
+                name: pageName,
+                equipmentData: []
+            };
+            
+            saveData();
+            renderPageList();
+            
+            // Cerrar el modal y limpiar el campo
+            bootstrap.Modal.getInstance(document.getElementById('newPageModal')).hide();
+            document.getElementById('newPageName').value = '';
+            
+            // Cambiar a la nueva página
+            switchPage(pageId);
+            
+            showAlert(`Página "${pageName}" creada correctamente`, 'success');
+        });
+
+        // Función para borrar todos los registros de la página actual
+        document.getElementById('clearPageBtn').addEventListener('click', function() {
+            const clearPageModal = new bootstrap.Modal(document.getElementById('clearPageModal'));
+            clearPageModal.show();
+        });
+
+        document.getElementById('confirmClearPage').addEventListener('click', function() {
+            pagesData[currentPageId].equipmentData = [];
+            saveData();
+            renderTable();
+            showAlert('Todos los registros de esta página han sido eliminados', 'danger');
+            bootstrap.Modal.getInstance(document.getElementById('clearPageModal')).hide();
+        });
+
+        // Función para exportar a Excel
+        document.getElementById('exportExcel').addEventListener('click', function() {
+            const equipmentData = pagesData[currentPageId].equipmentData;
+            
+            if (equipmentData.length === 0) {
+                showAlert('No hay registros para exportar.', 'warning');
+                return;
+            }
+
+            // Preparar datos para exportar
+            const dataForExport = equipmentData.map(item => ({
+                'BIEN': item.assetCode,
+                'APELLIDOS Y NOMBRES CUSTODIO': item.custodian,
+                'NOMBRE EQUIPO': item.equipmentName,
+                'MARCA': item.brand,
+                'MODELO': item.model,
+                'SERIE': item.serial,
+                'TIPO DE BIEN': item.type,
+                'PROCESADOR': item.processor,
+                'MEMORIA': item.memory + ' GB',
+                'DISCO DURO': item.hardDrive,
+                'SISTEMA OPERATIVO': item.os,
+                'ESTADO': item.status,
+                'TIEMPO DE FUNCIONAMIENTO': item.operationTime
+            }));
+
+            // Crear libro de trabajo y hoja de cálculo
+            const worksheet = XLSX.utils.json_to_sheet(dataForExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Registro de Bienes');
+
+            // Generar archivo Excel y descargar
+            XLSX.writeFile(workbook, `registro_bienes_${pagesData[currentPageId].name}.xlsx`);
+            
+            showAlert('Archivo Excel generado y descargado', 'success');
+        });
+
+        // Función para exportar a PDF
+        document.getElementById('exportPDF').addEventListener('click', function() {
+            const equipmentData = pagesData[currentPageId].equipmentData;
+            
+            if (equipmentData.length === 0) {
+                showAlert('No hay registros para exportar.', 'warning');
+                return;
+            }
+
+            const doc = new jsPDF();
+            
+            // Título
+            doc.setFontSize(18);
+            doc.text(`Registro de Bienes - ${pagesData[currentPageId].name}`, 14, 15);
+            doc.setFontSize(12);
+            doc.setTextColor(100);
+            doc.text(`Generado el: ${new Date().toLocaleDateString()}`, 14, 22);
+            
+            // Preparar datos para la tabla
+            const tableData = equipmentData.map(item => [
+                item.assetCode,
+                item.custodian,
+                item.equipmentName,
+                item.brand,
+                item.model,
+                item.serial,
+                item.type,
+                item.processor,
+                `${item.memory} GB`,
+                item.hardDrive,
+                item.os,
+                item.status,
+                item.operationTime
+            ]);
+            
+            // Crear tabla
+            doc.autoTable({
+                head: [['BIEN', 'CUSTODIO', 'EQUIPO', 'MARCA', 'MODELO', 'SERIE', 'TIPO', 'PROCESADOR', 'MEMORIA', 'DISCO DURO', 'S.O.', 'ESTADO', 'TIEMPO']],
+                body: tableData,
+                startY: 30,
+                theme: 'grid',
+                styles: { fontSize: 6 },
+                headStyles: { fillColor: [66, 139, 202] }
+            });
+            
+            // Guardar PDF
+            doc.save(`registro_bienes_${pagesData[currentPageId].name}.pdf`);
+            
+            showAlert('Archivo PDF generado y descargado', 'success');
+        });
+
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            renderPageList();
+            renderTable();
+        });
+    </script>
+</body>
+
+</html>
+
+
